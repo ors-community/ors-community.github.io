@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORS</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #060608;
+    --panel:    #0c0d12;
+    --border:   #1a1d2e;
+    --red:      #c8102e;
+    --red-glow: #ff1a3c;
+    --blue:     #0a84ff;
+    --green:    #00e676;
+    --offline:  #444;
+    --text:     #d0d4e8;
+    --muted:    #565a78;
+    --white:    #f0f2ff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── SCANLINE OVERLAY ─────────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,.08) 2px,
+      rgba(0,0,0,.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ─── HEADER / NAV ─────────────────────────────────────── */
+  header {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(6,6,8,.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2.5rem;
+    height: 64px;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: .75rem;
+    text-decoration: none;
+  }
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: var(--red);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    color: #fff;
+    letter-spacing: 1px;
+    box-shadow: 0 0 20px rgba(200,16,46,.6);
+    animation: pulse-hex 3s ease-in-out infinite;
+  }
+  @keyframes pulse-hex {
+    0%,100% { box-shadow: 0 0 20px rgba(200,16,46,.6); }
+    50%      { box-shadow: 0 0 40px rgba(255,26,60,.9); }
+  }
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    color: var(--white);
+    letter-spacing: 3px;
+  }
+  .logo-text span { color: var(--red); }
+
+  nav { display: flex; gap: .25rem; }
+  .nav-btn {
+    padding: .45rem 1.1rem;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: .85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  .nav-btn::after {
+    content: '';
+    position: absolute; bottom: -1px; left: 50%; right: 50%;
+    height: 2px;
+    background: var(--red);
+    transition: all .2s;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    color: var(--white);
+    border-color: var(--border);
+    background: rgba(255,255,255,.04);
+  }
+  .nav-btn:hover::after, .nav-btn.active::after {
+    left: 0; right: 0;
+  }
+
+  /* ─── PAGES ────────────────────────────────────────────── */
+  .page { display: none; padding-top: 64px; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* ─── HERO ─────────────────────────────────────────────── */
+  .hero {
+    position: relative;
+    height: calc(100vh - 64px);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  /* Animated grid bg */
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+    animation: grid-scroll 20s linear infinite;
+  }
+  @keyframes grid-scroll {
+    from { background-position: 0 0; }
+    to   { background-position: 60px 60px; }
+  }
+
+  /* Red vignette corners */
+  .hero::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 0% 0%, rgba(200,16,46,.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 100% 100%, rgba(200,16,46,.1) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .hero-content { position: relative; z-index: 2; }
+
+  .hero-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .75rem;
+    letter-spacing: 5px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+    opacity: 0;
+    animation: fade-up .6s .3s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 12vw, 9rem);
+    line-height: .9;
+    color: var(--white);
+    letter-spacing: 6px;
+    text-shadow: 0 0 80px rgba(200,16,46,.4);
+    opacity: 0;
+    animation: fade-up .7s .5s forwards;
+  }
+  .hero-title .accent { color: var(--red); }
+
+  .hero-sub {
+    margin-top: 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fade-up .6s .7s forwards;
+  }
+
+  .hero-cta {
+    margin-top: 3rem;
+    display: flex; gap: 1rem;
+    opacity: 0;
+    animation: fade-up .6s .9s forwards;
+  }
+  .btn-primary {
+    padding: .75rem 2.2rem;
+    background: var(--red);
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: .9rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: all .2s;
+    box-shadow: 0 0 30px rgba(200,16,46,.4);
+  }
+  .btn-primary:hover {
+    background: var(--red-glow);
+    box-shadow: 0 0 50px rgba(255,26,60,.6);
+    transform: translateY(-2px);
+  }
+  .btn-secondary {
+    padding: .75rem 2.2rem;
+    background: transparent;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: .9rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: all .2s;
+  }
+  .btn-secondary:hover {
+    border-color: var(--red);
+    color: var(--white);
+    transform: translateY(-2px);
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Scroll indicator */
+  .scroll-indicator {
+    position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .65rem;
+    letter-spacing: 3px;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  .scroll-indicator svg { opacity: .5; }
+  @keyframes bounce {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50%      { transform: translateX(-50%) translateY(8px); }
+  }
+
+  /* ─── SECTION COMMON ───────────────────────────────────── */
+  .section { padding: 5rem 2.5rem; max-width: 1200px; margin: 0 auto; }
+  .section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .7rem;
+    letter-spacing: 5px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: .75rem;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    letter-spacing: 4px;
+    color: var(--white);
+    margin-bottom: 2.5rem;
+  }
+
+  /* ─── SERVER CARDS ─────────────────────────────────────── */
+  .servers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .server-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: transform .25s, border-color .25s;
+  }
+  .server-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--red);
+  }
+  .server-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--red), transparent);
+  }
+
+  .card-banner {
+    height: 160px;
+    position: relative;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-banner-re {
+    background: linear-gradient(135deg, #1a0008 0%, #3d0015 40%, #0a0005 100%);
+  }
+  .card-banner-drp {
+    background: linear-gradient(135deg, #010a18 0%, #03244d 40%, #010d20 100%);
+  }
+
+  /* Umbrella logo SVG in banner */
+  .banner-icon {
+    position: absolute;
+    opacity: .12;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 8rem;
+    letter-spacing: -4px;
+    color: var(--white);
+    user-select: none;
+  }
+  .banner-title {
+    position: relative; z-index: 2;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 5px;
+    color: var(--white);
+    text-align: center;
+    text-shadow: 0 2px 20px rgba(0,0,0,.8);
+    padding: 1rem;
+  }
+  .banner-tag {
+    position: absolute; top: 12px; right: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .6rem;
+    letter-spacing: 2px;
+    padding: .25rem .6rem;
+    border: 1px solid;
+    text-transform: uppercase;
+  }
+  .tag-horror { border-color: var(--red); color: var(--red); }
+  .tag-rp     { border-color: var(--blue); color: var(--blue); }
+  .tag-wip    { border-color: var(--muted); color: var(--muted); }
+
+  .card-body { padding: 1.5rem; }
+
+  .status-row {
+    display: flex; align-items: center; gap: .75rem;
+    margin-bottom: 1rem;
+  }
+  .status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--offline);
+    flex-shrink: 0;
+  }
+  .status-dot.online {
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50%      { opacity: .5; }
+  }
+  .status-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .75rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+  .status-text.online { color: var(--green); }
+  .player-count {
+    margin-left: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .75rem;
+    color: var(--muted);
+  }
+
+  .card-desc {
+    font-size: .95rem;
+    line-height: 1.6;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .card-info-row {
+    display: flex; gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .info-chip {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .65rem;
+    letter-spacing: 1.5px;
+    padding: .3rem .7rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .card-connect {
+    width: 100%;
+    padding: .65rem;
+    background: rgba(200,16,46,.12);
+    border: 1px solid var(--red);
+    color: var(--red);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: .85rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .card-connect:hover:not(:disabled) {
+    background: var(--red);
+    color: #fff;
+  }
+  .card-connect:disabled {
+    opacity: .4; cursor: not-allowed;
+    border-color: var(--muted);
+    color: var(--muted);
+  }
+  .card-connect-drp {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: rgba(10,132,255,.08);
+  }
+  .card-connect-drp:hover:not(:disabled) {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  /* ─── ABOUT PAGE ───────────────────────────────────────── */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  @media (max-width: 700px) { .about-grid { grid-template-columns: 1fr; } }
+
+  .about-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    position: relative;
+  }
+  .about-block::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--red);
+  }
+  .about-block h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    color: var(--white);
+    margin-bottom: 1rem;
+  }
+  .about-block p {
+    color: var(--muted);
+    line-height: 1.7;
+    font-size: .95rem;
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin-top: 3rem;
+  }
+  .stat-cell {
+    background: var(--panel);
+    padding: 2rem;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    color: var(--red);
+    line-height: 1;
+  }
+  .stat-lbl {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .65rem;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-top: .5rem;
+    text-transform: uppercase;
+  }
+
+  /* ─── RÈGLES PAGE ──────────────────────────────────────── */
+  .rules-accordion { display: flex; flex-direction: column; gap: .5rem; }
+  .rule-item {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    overflow: hidden;
+  }
+  .rule-header {
+    padding: 1.1rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    transition: background .2s;
+  }
+  .rule-header:hover { background: rgba(255,255,255,.03); }
+  .rule-header-left { display: flex; align-items: center; gap: 1rem; }
+  .rule-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .7rem;
+    color: var(--red);
+    letter-spacing: 2px;
+    min-width: 36px;
+  }
+  .rule-title-text {
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--white);
+  }
+  .rule-chevron {
+    color: var(--muted);
+    transition: transform .3s;
+    font-size: 1.2rem;
+  }
+  .rule-item.open .rule-chevron { transform: rotate(180deg); }
+  .rule-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height .35s ease;
+    padding: 0 1.5rem;
+    color: var(--muted);
+    font-size: .95rem;
+    line-height: 1.7;
+  }
+  .rule-item.open .rule-body { max-height: 600px; padding: 0 1.5rem 1.5rem; }
+
+  .rules-category-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 4px;
+    color: var(--red);
+    margin: 2rem 0 .75rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ─── RECRUTEMENT PAGE ─────────────────────────────────── */
+  .roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-bottom: 3rem;
+  }
+  .role-card {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    padding: 1.5rem;
+    position: relative;
+    transition: border-color .2s, transform .2s;
+  }
+  .role-card:hover { border-color: var(--red); transform: translateY(-3px); }
+  .role-icon {
+    font-size: 2rem; margin-bottom: .75rem;
+  }
+  .role-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 3px;
+    color: var(--white);
+    margin-bottom: .5rem;
+  }
+  .role-desc { color: var(--muted); font-size: .9rem; line-height: 1.6; }
+  .role-badge {
+    position: absolute; top: 1rem; right: 1rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .6rem;
+    letter-spacing: 2px;
+    padding: .2rem .5rem;
+    border: 1px solid var(--green);
+    color: var(--green);
+  }
+  .role-badge.closed { border-color: var(--muted); color: var(--muted); }
+
+  .apply-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 2.5rem;
+    position: relative;
+  }
+  .apply-box::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--red), var(--blue));
+  }
+  .apply-box h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 4px;
+    color: var(--white);
+    margin-bottom: .5rem;
+  }
+  .apply-box p { color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+  .apply-field {
+    margin-bottom: 1rem;
+  }
+  .apply-field label {
+    display: block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .65rem;
+    letter-spacing: 3px;
+    color: var(--red);
+    margin-bottom: .5rem;
+    text-transform: uppercase;
+  }
+  .apply-field input,
+  .apply-field textarea,
+  .apply-field select {
+    width: 100%;
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    padding: .65rem 1rem;
+    outline: none;
+    transition: border-color .2s;
+    resize: vertical;
+  }
+  .apply-field input:focus,
+  .apply-field textarea:focus,
+  .apply-field select:focus { border-color: var(--red); }
+  .apply-field select option { background: var(--panel); }
+
+  /* ─── FOOTER ───────────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 4px;
+    color: var(--muted);
+  }
+  .footer-logo span { color: var(--red); }
+  .footer-copy {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .65rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .65rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .footer-links a:hover { color: var(--red); }
+
+  /* ─── TOAST ─────────────────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: var(--panel);
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .75rem;
+    letter-spacing: 2px;
+    padding: .75rem 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all .3s;
+    pointer-events: none;
+    z-index: 9000;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ─── MISC ──────────────────────────────────────────────── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--red), transparent);
+    margin: 3rem 0;
+    max-width: 1200px;
+    margin-left: auto; margin-right: auto;
+  }
+
+  /* Umbrella SVG symbol */
+  .umbrella-svg {
+    position: absolute; opacity: .05;
+    pointer-events: none;
+  }
+
+  /* ─── LORE PAGE ─────────────────────────────────────────── */
+  .lore-hero {
+    position: relative;
+    padding: 5rem 2.5rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  .lore-bg-symbol {
+    position: absolute; right: -80px; top: 50%; transform: translateY(-50%);
+    opacity: .04; pointer-events: none; user-select: none;
+    font-size: 28rem; line-height: 1;
+    font-family: 'Bebas Neue', sans-serif;
+    color: var(--red);
+  }
+
+  .lore-tabs {
+    display: flex; gap: .25rem; margin-bottom: 3rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+  .lore-tab {
+    padding: .6rem 1.4rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: .85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    bottom: -1px;
+    transition: all .2s;
+  }
+  .lore-tab:hover { color: var(--white); }
+  .lore-tab.active {
+    color: var(--white);
+    border-color: var(--border);
+    border-bottom-color: var(--bg);
+    background: var(--bg);
+  }
+  .lore-tab.active::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--red);
+    bottom: -1px;
+  }
+
+  .lore-content { display: none; }
+  .lore-content.active { display: block; }
+
+  /* Lore RE layout */
+  .lore-re-header {
+    position: relative;
+    background: linear-gradient(135deg, #120005 0%, #2a0010 50%, #0a0003 100%);
+    border: 1px solid rgba(200,16,46,.2);
+    padding: 3rem;
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+  .lore-re-header::before {
+    content: '☣';
+    position: absolute; right: 2rem; top: 50%; transform: translateY(-50%);
+    font-size: 8rem; opacity: .06; pointer-events: none;
+  }
+  .lore-re-header::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--red), transparent);
+  }
+  .lore-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .65rem; letter-spacing: 5px; color: var(--red);
+    text-transform: uppercase; margin-bottom: .75rem;
+  }
+  .lore-main-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: 4px; color: var(--white);
+    line-height: 1; margin-bottom: .5rem;
+  }
+  .lore-main-title span { color: var(--red); }
+  .lore-location {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .7rem; letter-spacing: 3px; color: var(--muted);
+    margin-top: .75rem;
+  }
+
+  .lore-chapters { display: flex; flex-direction: column; gap: 1rem; }
+  .lore-chapter {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    overflow: hidden;
+    position: relative;
+  }
+  .lore-chapter::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--red);
+    opacity: .4;
+  }
+  .lore-chapter-header {
+    padding: 1.2rem 1.5rem 1.2rem 1.8rem;
+    display: flex; align-items: center; gap: 1rem;
+    cursor: pointer; user-select: none;
+    transition: background .2s;
+  }
+  .lore-chapter-header:hover { background: rgba(255,255,255,.03); }
+  .lore-chapter-icon {
+    font-size: 1.3rem; flex-shrink: 0;
+  }
+  .lore-chapter-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.15rem; letter-spacing: 3px; color: var(--white);
+    flex: 1;
+  }
+  .lore-chapter-chevron {
+    color: var(--muted); transition: transform .3s; font-size: 1rem;
+  }
+  .lore-chapter.open .lore-chapter-chevron { transform: rotate(180deg); }
+  .lore-chapter.open::before { opacity: 1; background: var(--red); }
+
+  .lore-chapter-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height .4s ease;
+    padding: 0 1.5rem 0 1.8rem;
+  }
+  .lore-chapter.open .lore-chapter-body {
+    max-height: 1000px;
+    padding: 0 1.5rem 1.5rem 1.8rem;
+  }
+  .lore-chapter-body p {
+    color: var(--muted); line-height: 1.75; font-size: .95rem;
+    margin-bottom: .75rem;
+  }
+  .lore-chapter-body p:last-child { margin-bottom: 0; }
+  .lore-quote {
+    border-left: 2px solid var(--red);
+    padding: .75rem 1rem;
+    margin: 1rem 0;
+    background: rgba(200,16,46,.06);
+  }
+  .lore-quote p { color: var(--text) !important; font-style: italic; margin: 0 !important; }
+  .lore-list { list-style: none; margin: .75rem 0; }
+  .lore-list li {
+    color: var(--muted); font-size: .95rem; line-height: 1.6;
+    padding: .3rem 0;
+    padding-left: 1.2rem;
+    position: relative;
+  }
+  .lore-list li::before {
+    content: '▸';
+    position: absolute; left: 0; color: var(--red); font-size: .7rem;
+    top: .4rem;
+  }
+
+  .lore-warning {
+    margin-top: 2rem;
+    background: rgba(200,16,46,.08);
+    border: 1px solid rgba(200,16,46,.3);
+    padding: 1.5rem 2rem;
+    text-align: center;
+  }
+  .lore-warning p {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem; letter-spacing: 4px; color: var(--red);
+  }
+
+  /* DarkRP lore placeholder */
+  .lore-wip {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 300px; text-align: center;
+    border: 1px dashed var(--border); gap: 1rem;
+    padding: 3rem;
+  }
+  .lore-wip-icon { font-size: 3rem; opacity: .4; }
+  .lore-wip h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem; letter-spacing: 4px; color: var(--muted);
+  }
+  .lore-wip p {
+    color: var(--muted); font-size: .95rem;
+    max-width: 400px; line-height: 1.6;
+  }
+
+  /* ─── RÈGLEMENT COMPLET ─────────────────────────────────── */
+  .reg-update {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .65rem; letter-spacing: 3px; color: var(--muted);
+    margin-bottom: 2rem;
+  }
+  .sanction-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .sanction-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .sanction-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .sanction-warn::before  { background: #f59e0b; }
+  .sanction-kick::before  { background: var(--blue); }
+  .sanction-ban::before   { background: var(--red); }
+  .sanction-perm::before  { background: #111; background: repeating-linear-gradient(45deg,#111,#111 4px,var(--red) 4px,var(--red) 8px); }
+  .sanction-icon { font-size: 1.4rem; margin-bottom: .5rem; }
+  .sanction-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem; letter-spacing: 3px; color: var(--white);
+    margin-bottom: .25rem;
+  }
+  .sanction-trigger {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .6rem; letter-spacing: 1px; color: var(--muted);
+    margin-bottom: .5rem;
+  }
+  .sanction-desc { color: var(--muted); font-size: .85rem; line-height: 1.5; }
+  .appeal-box {
+    margin-top: 2rem;
+    background: rgba(10,132,255,.06);
+    border: 1px solid rgba(10,132,255,.2);
+    padding: 1.5rem 2rem;
+    display: flex; gap: 1rem; align-items: flex-start;
+  }
+  .appeal-box-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .appeal-box p { color: var(--muted); font-size: .9rem; line-height: 1.6; }
+  .appeal-box strong { color: var(--blue); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <a class="logo" href="#" onclick="showPage('home')">
+    <div class="logo-mark">ORS</div>
+    <span class="logo-text">O<span>R</span>S</span>
+  </a>
+  <nav>
+    <button class="nav-btn active" onclick="showPage('home')">Accueil</button>
+    <button class="nav-btn" onclick="showPage('servers')">Serveurs</button>
+    <button class="nav-btn" onclick="showPage('lore')">Lore</button>
+    <button class="nav-btn" onclick="showPage('about')">Communauté</button>
+    <button class="nav-btn" onclick="showPage('rules')">Règles</button>
+
+  </nav>
+</header>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════════ PAGE : ACCUEIL -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-grid"></div>
+    <!-- Umbrella watermark -->
+    <svg class="umbrella-svg" width="500" height="500" viewBox="0 0 100 100" style="right:-100px;top:50%;transform:translateY(-50%)">
+      <circle cx="50" cy="50" r="48" fill="none" stroke="white" stroke-width="2"/>
+      <line x1="50" y1="2" x2="50" y2="98" stroke="white" stroke-width="2"/>
+      <line x1="2" y1="50" x2="98" y2="50" stroke="white" stroke-width="2"/>
+    </svg>
+    <div class="hero-content">
+      <p class="hero-eyebrow">// Bienvenue dans l'ORS</p>
+      <h1 class="hero-title">ORS</h1>
+      <p class="hero-sub">Communauté Garry's Mod Française · Roleplay · Survie</p>
+      <div class="hero-cta">
+        <button class="btn-primary" onclick="showPage('servers')">Nos Serveurs</button>
+        <button class="btn-secondary" onclick="showPage('about')">Découvrir l'ORS</button>
+      </div>
+    </div>
+    <div class="scroll-indicator">
+      <svg width="16" height="24" viewBox="0 0 16 24" fill="none">
+        <rect x="1" y="1" width="14" height="22" rx="7" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="8" cy="8" r="2" fill="currentColor"/>
+      </svg>
+      SCROLL
+    </div>
+  </div>
+
+  <!-- Mini server status on home -->
+  <div class="section">
+    <p class="section-label">// Statut en direct</p>
+    <h2 class="section-title">NOS SERVEURS</h2>
+    <div class="servers-grid">
+      <!-- RE Card (home) -->
+      <div class="server-card" id="home-re-card">
+        <div class="card-banner card-banner-re">
+          <span class="banner-icon">☣</span>
+          <div>
+            <div class="banner-title">RESIDENT EVIL<br>LA RÉSURRECTION D'UMBRELLA</div>
+          </div>
+          <div class="banner-tag tag-wip">🔧 En Développement</div>
+        </div>
+        <div class="card-body">
+          <div class="status-row">
+            <div class="status-dot" id="home-re-dot"></div>
+            <span class="status-text" id="home-re-status">Vérification...</span>
+            <span class="player-count" id="home-re-players"></span>
+          </div>
+          <p class="card-desc">Plongez dans l'univers post-apocalyptique de Resident Evil. Survivez aux hordes de zombies et déjouez les plans d'Umbrella Corporation.</p>
+          <button class="card-connect" id="home-re-btn" onclick="connectServer('re')" disabled>CONNEXION</button>
+        </div>
+      </div>
+      <!-- DarkRP Card (home) -->
+      <div class="server-card" id="home-drp-card">
+        <div class="card-banner card-banner-drp">
+          <span class="banner-icon" style="color:#0a84ff">◈</span>
+          <div>
+            <div class="banner-title">DARKRP<br>THÈME À VENIR</div>
+          </div>
+          <div class="banner-tag tag-wip">En Cours</div>
+        </div>
+        <div class="card-body">
+          <div class="status-row">
+            <div class="status-dot" id="home-drp-dot"></div>
+            <span class="status-text" id="home-drp-status">Vérification...</span>
+            <span class="player-count" id="home-drp-players"></span>
+          </div>
+          <p class="card-desc">Notre serveur DarkRP est en cours de développement. Un thème unique est en préparation pour offrir une expérience de roleplay inédite.</p>
+          <button class="card-connect card-connect-drp" id="home-drp-btn" onclick="connectServer('drp')" disabled>CONNEXION</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">O<span>R</span>S</div>
+    <div class="footer-copy">© 2025 ORS Community · Tous droits réservés</div>
+    <div class="footer-links">
+      <a href="#">Discord</a>
+      <a href="#">Steam</a>
+      <a href="#">Contact</a>
+    </div>
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════════════ PAGE : SERVEURS -->
+<div class="page" id="page-servers">
+  <div class="section">
+    <p class="section-label">// Infrastructure ORS</p>
+    <h2 class="section-title">NOS SERVEURS</h2>
+    <div class="servers-grid">
+      <!-- RE Full Card -->
+      <div class="server-card">
+        <div class="card-banner card-banner-re">
+          <span class="banner-icon">☣</span>
+          <div style="position:relative;z-index:2;text-align:center">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:4px;color:var(--red);margin-bottom:.25rem">ORS SERVER #1</div>
+            <div class="banner-title">RESIDENT EVIL<br>LA RÉSURRECTION D'UMBRELLA</div>
+          </div>
+          <div class="banner-tag tag-wip">🔧 En Développement</div>
+        </div>
+        <div class="card-body">
+          <div class="status-row">
+            <div class="status-dot" id="srv-re-dot"></div>
+            <span class="status-text" id="srv-re-status">Vérification...</span>
+            <span class="player-count" id="srv-re-players"></span>
+          </div>
+          <p class="card-desc">Bienvenue dans un Garry's Mod Zombie Survival / Horror RP inspiré de l'univers Resident Evil. Survivez à l'épidémie du virus-T, résistez aux expériences d'Umbrella et tentez de sauver ce qui reste de l'humanité.</p>
+          <div class="card-info-row">
+            <div class="info-chip">Zombie Survival</div>
+            <div class="info-chip">Horror RP</div>
+            <div class="info-chip">PvE / PvP</div>
+            <div class="info-chip">Lore RE</div>
+          </div>
+          <button class="card-connect" id="srv-re-btn" onclick="connectServer('re')" disabled>
+            SE CONNECTER AU SERVEUR
+          </button>
+        </div>
+      </div>
+      <!-- DarkRP Full Card -->
+      <div class="server-card">
+        <div class="card-banner card-banner-drp">
+          <span class="banner-icon" style="color:var(--blue)">◈</span>
+          <div style="position:relative;z-index:2;text-align:center">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:4px;color:var(--blue);margin-bottom:.25rem">ORS SERVER #2</div>
+            <div class="banner-title" style="color:var(--blue)">DARKRP<br>THÈME À VENIR</div>
+          </div>
+          <div class="banner-tag tag-wip">🔧 En Développement</div>
+        </div>
+        <div class="card-body">
+          <div class="status-row">
+            <div class="status-dot" id="srv-drp-dot"></div>
+            <span class="status-text" id="srv-drp-status">Vérification...</span>
+            <span class="player-count" id="srv-drp-players"></span>
+          </div>
+          <p class="card-desc">Notre deuxième serveur DarkRP est en pleine construction. Le thème n'est pas encore défini — restez connectés pour l'annonce ! Promis, ça va déchirer.</p>
+          <div class="card-info-row">
+            <div class="info-chip" style="border-color:var(--blue);color:var(--blue)">DarkRP</div>
+            <div class="info-chip" style="border-color:var(--muted);color:var(--muted)">Thème TBA</div>
+            <div class="info-chip" style="border-color:var(--muted);color:var(--muted)">WIP</div>
+          </div>
+          <button class="card-connect card-connect-drp" id="srv-drp-btn" onclick="connectServer('drp')" disabled>
+            SE CONNECTER AU SERVEUR
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- How to connect -->
+    <div style="background:var(--panel);border:1px solid var(--border);padding:2rem;margin-top:2rem;position:relative">
+      <div style="position:absolute;top:0;right:0;font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:2px;padding:.4rem .8rem;border-left:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--muted)">GUIDE</div>
+      <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:3px;color:var(--white);margin-bottom:1rem">COMMENT SE CONNECTER</h3>
+      <div style="display:flex;flex-direction:column;gap:.75rem">
+        <div style="display:flex;gap:1rem;align-items:flex-start">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--red);min-width:24px">01</div>
+          <div style="color:var(--muted);font-size:.95rem">Lancez <strong style="color:var(--white)">Garry's Mod</strong> sur Steam</div>
+        </div>
+        <div style="display:flex;gap:1rem;align-items:flex-start">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--red);min-width:24px">02</div>
+          <div style="color:var(--muted);font-size:.95rem">Ouvrez la <strong style="color:var(--white)">Console</strong> avec la touche <code style="font-family:'Share Tech Mono',monospace;background:rgba(255,255,255,.06);padding:.1rem .4rem;border:1px solid var(--border)">²</code></div>
+        </div>
+        <div style="display:flex;gap:1rem;align-items:flex-start">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--red);min-width:24px">03</div>
+          <div style="color:var(--muted);font-size:.95rem">Tapez <code style="font-family:'Share Tech Mono',monospace;background:rgba(255,255,255,.06);padding:.1rem .4rem;border:1px solid var(--border)">connect IP:PORT</code> ou cliquez sur le bouton de connexion ci-dessus</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-logo">O<span>R</span>S</div>
+    <div class="footer-copy">© 2025 ORS Community</div>
+    <div class="footer-links"><a href="#">Discord</a><a href="#">Steam</a></div>
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════════════ PAGE : LORE -->
+<div class="page" id="page-lore">
+  <div class="lore-hero">
+    <p class="section-label">// Univers & Histoire</p>
+    <h2 class="section-title">LORE</h2>
+
+    <div class="lore-tabs">
+      <button class="lore-tab active" onclick="showLore('re')">☣ Resident Evil : La Résurrection d'Umbrella</button>
+      <button class="lore-tab" onclick="showLore('drp')">◈ DarkRP — Serveur #2</button>
+    </div>
+
+    <!-- ── LORE RE ── -->
+    <div class="lore-content active" id="lore-re">
+
+      <div class="lore-re-header">
+        <div class="lore-eyebrow">// Dossier Classifié — Niveau 5</div>
+        <div class="lore-main-title">LA RÉSURRECTION<br><span>D'UMBRELLA</span></div>
+        <div class="lore-location">📍 LOCALISATION : RUSSIE 🇷🇺 · COMPLEXE SOUTERRAIN CLASSIFIÉ</div>
+      </div>
+
+      <div class="lore-chapters">
+
+        <div class="lore-chapter open">
+          <div class="lore-chapter-header" onclick="toggleLore(this)">
+            <span class="lore-chapter-icon">🔴</span>
+            <span class="lore-chapter-title">Ce que le monde croit savoir</span>
+            <span class="lore-chapter-chevron">▾</span>
+          </div>
+          <div class="lore-chapter-body">
+            <p>Depuis sa chute, beaucoup pensaient que la <strong style="color:var(--white)">Umbrella Corporation</strong> n'était plus qu'un souvenir lié aux catastrophes de <strong style="color:var(--white)">Raccoon City</strong>.</p>
+            <p>Pourtant, contre toute attente, l'entreprise a refait surface. Officiellement, elle s'est reconstruite sur des bases nouvelles : une société pharmaceutique <em>moderne</em>, <em>légale</em>, tournée vers la recherche médicale et la transparence.</p>
+            <div class="lore-quote"><p>Aux yeux du monde, Umbrella cherche à se racheter.</p></div>
+          </div>
+        </div>
+
+        <div class="lore-chapter">
+          <div class="lore-chapter-header" onclick="toggleLore(this)">
+            <span class="lore-chapter-icon">⚗️</span>
+            <span class="lore-chapter-title">La réalité derrière la façade</span>
+            <span class="lore-chapter-chevron">▾</span>
+          </div>
+          <div class="lore-chapter-body">
+            <p>Au cœur du complexe, les laboratoires <strong style="color:var(--white)">n'ont jamais vraiment cessé de fonctionner</strong>. Les scientifiques y poursuivent des recherches que personne à l'extérieur ne soupçonne.</p>
+            <p>Certains travaillent sur des <strong style="color:var(--white)">virus et des antidotes</strong>, d'autres repoussent les limites du corps humain par la <strong style="color:var(--white)">génétique</strong>, et quelques-uns expérimentent directement sur des <strong style="color:var(--white)">sujets vivants</strong>.</p>
+            <div class="lore-quote">
+              <p>🔬 Ceux qui croient sincèrement en la science.<br>
+              😶 Ceux qui ferment les yeux pour avancer.<br>
+              ⚠️ Ceux qui comprennent… mais <strong>trop tard</strong>.</p>
+            </div>
+            <p>Lorsqu'une expérience échoue, la priorité n'est pas d'arrêter. <em>Corriger. Améliorer. Dissimuler.</em></p>
+          </div>
+        </div>
+
+        <div class="lore-chapter">
+          <div class="lore-chapter-header" onclick="toggleLore(this)">
+            <span class="lore-chapter-icon">🪖</span>
+            <span class="lore-chapter-title">Les soldats — Gardiens de l'ombre</span>
+            <span class="lore-chapter-chevron">▾</span>
+          </div>
+          <div class="lore-chapter-body">
+            <p>À l'extérieur des laboratoires, les soldats assurent la sécurité du site. Ils patrouillent, surveillent, exécutent les ordres. <em>Mais ils ne savent pas tout.</em></p>
+            <p>On leur demande de sécuriser des zones <strong style="color:var(--white)">sans explication</strong>, d'escorter des individus dont ils ignorent tout… parfois même d'éliminer des <strong style="color:var(--red)">« anomalies »</strong> sans poser de questions.</p>
+            <div class="lore-quote">
+              <p>Certains obéissent sans hésiter.<br>D'autres commencent à <strong>douter</strong>.</p>
+            </div>
+            <p>Peu à peu, ils découvrent des fragments de vérité qu'on ne leur destinait pas.</p>
+          </div>
+        </div>
+
+        <div class="lore-chapter">
+          <div class="lore-chapter-header" onclick="toggleLore(this)">
+            <span class="lore-chapter-icon">⚔️</span>
+            <span class="lore-chapter-title">Scientifiques vs Soldats</span>
+            <span class="lore-chapter-chevron">▾</span>
+          </div>
+          <div class="lore-chapter-body">
+            <p>Entre les deux camps, la tension est <strong style="color:var(--white)">constante</strong>. Les premiers veulent poursuivre leurs travaux, quitte à prendre des risques. Les seconds doivent maintenir l'ordre et éviter que ces risques ne <strong style="color:var(--red)">dégénèrent</strong>.</p>
+            <div class="lore-quote">
+              <p>Chacun dépend de l'autre.<br><strong>Aucun ne fait réellement confiance à l'autre.</strong></p>
+            </div>
+            <p>Et au-dessus de tout cela — la <strong style="color:var(--white)">direction</strong> observe, contrôle et manipule. Elle décide ce qui doit être su… <em>et ce qui doit rester enterré.</em></p>
+          </div>
+        </div>
+
+        <div class="lore-chapter">
+          <div class="lore-chapter-header" onclick="toggleLore(this)">
+            <span class="lore-chapter-icon">🕵️</span>
+            <span class="lore-chapter-title">Secrets, mensonges & doubles jeux</span>
+            <span class="lore-chapter-chevron">▾</span>
+          </div>
+          <div class="lore-chapter-body">
+            <p>Dans l'ombre, les secrets s'accumulent. Des informations sont <strong style="color:var(--white)">falsifiées</strong>, des rapports <strong style="color:var(--white)">disparaissent</strong>, et certains individus ne sont <em>pas ce qu'ils prétendent être</em>.</p>
+            <ul class="lore-list">
+              <li>Infiltrations.</li>
+              <li>Mensonges.</li>
+              <li>Doubles jeux.</li>
+            </ul>
+            <div class="lore-quote"><p>Personne n'est totalement sûr de qui est digne de confiance.</p></div>
+          </div>
+        </div>
+
+        <div class="lore-chapter">
+          <div class="lore-chapter-header" onclick="toggleLore(this)">
+            <span class="lore-chapter-icon">🚨</span>
+            <span class="lore-chapter-title">Les premiers signes</span>
+            <span class="lore-chapter-chevron">▾</span>
+          </div>
+          <div class="lore-chapter-body">
+            <p>Au début, le complexe semble fonctionner <strong style="color:var(--white)">normalement</strong>. Puis, progressivement… <em>les incidents surviennent.</em></p>
+            <ul class="lore-list">
+              <li>Une fuite.</li>
+              <li>Un sujet de test qui <strong style="color:var(--red)">disparaît</strong>.</li>
+              <li>Une zone soudainement <strong style="color:var(--red)">verrouillée</strong>.</li>
+              <li>Une panne <strong style="color:var(--red)">inexpliquée</strong>.</li>
+            </ul>
+            <p>Rien de suffisamment grave pour tout arrêter… <em>Mais assez pour installer un <strong style="color:var(--white)">malaise</strong>.</em></p>
+          </div>
+        </div>
+
+        <div class="lore-chapter">
+          <div class="lore-chapter-header" onclick="toggleLore(this)">
+            <span class="lore-chapter-icon">💉</span>
+            <span class="lore-chapter-title">Ce qu'ils ne savent pas encore</span>
+            <span class="lore-chapter-chevron">▾</span>
+          </div>
+          <div class="lore-chapter-body">
+            <p>Certains soldats reçoivent des <strong style="color:var(--white)">injections régulières</strong>, présentées comme de simples mesures médicales. Ils se sentent plus forts, plus rapides… <em>mais différents.</em></p>
+            <p>Des effets secondaires apparaissent. <em>Discrets au début.</em> Puis de plus en plus <strong style="color:var(--red)">difficiles à ignorer</strong>.</p>
+            <div class="lore-quote"><p>Sans le savoir, ils pourraient être devenus <strong>bien plus que de simples gardes.</strong></p></div>
+          </div>
+        </div>
+
+        <div class="lore-chapter">
+          <div class="lore-chapter-header" onclick="toggleLore(this)">
+            <span class="lore-chapter-icon">🧫</span>
+            <span class="lore-chapter-title">L'évolution</span>
+            <span class="lore-chapter-chevron">▾</span>
+          </div>
+          <div class="lore-chapter-body">
+            <p>Dans les laboratoires, une version du virus — <strong style="color:var(--white)">plus stable, plus contrôlable</strong> — prend forme. Pas une arme chaotique. Quelque chose de plus <em>subtil</em>.</p>
+            <p>Une évolution. Une amélioration. <em>Du moins, c'est ce que certains veulent croire.</em></p>
+            <p>Le complexe a rouvert ses portes. Tout semble <strong style="color:var(--white)">sous contrôle</strong>. Pourtant, à mesure que les jours passent, une évidence s'impose lentement à ceux qui y travaillent.</p>
+          </div>
+        </div>
+
+      </div><!-- /lore-chapters -->
+
+      <div class="lore-warning">
+        <p>⚠ Quelque chose ne tourne pas rond.</p>
+      </div>
+
+    </div><!-- /lore-re -->
+
+    <!-- ── LORE DARKRP ── -->
+    <div class="lore-content" id="lore-drp">
+      <div class="lore-wip">
+        <div class="lore-wip-icon">◈</div>
+        <h3>LORE EN COURS DE RÉDACTION</h3>
+        <p>Le lore du serveur DarkRP est en cours d'élaboration. Le thème n'a pas encore été annoncé. Restez connectés sur notre Discord pour l'annonce officielle.</p>
+      </div>
+    </div>
+
+  </div><!-- /lore-hero -->
+  <footer>
+    <div class="footer-logo">O<span>R</span>S</div>
+    <div class="footer-copy">© 2025 ORS Community</div>
+    <div class="footer-links"><a href="#">Discord</a><a href="#">Steam</a></div>
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════════════ PAGE : COMMUNAUTÉ -->
+<div class="page" id="page-about">
+  <div class="section">
+    <p class="section-label">// À propos</p>
+    <h2 class="section-title">LA COMMUNAUTÉ ORS</h2>
+
+    <div class="about-grid">
+      <div>
+        <div class="about-block" style="margin-bottom:1rem">
+          <h3>QUI SOMMES-NOUS ?</h3>
+          <p>L'ORS est une communauté Garry's Mod française passionnée par le roleplay immersif et les expériences de jeu uniques. Fondée par des joueurs, pour des joueurs, notre objectif est de créer des serveurs qui sortent de l'ordinaire.</p>
+        </div>
+        <div class="about-block">
+          <h3>NOTRE VISION</h3>
+          <p>Nous croyons qu'un bon serveur Gmod repose sur une communauté soudée, une équipe d'administration sérieuse et un gameplay soigneusement élaboré. Chaque détail compte — des règles aux maps, en passant par les addons et l'ambiance.</p>
+        </div>
+      </div>
+      <div>
+        <div class="about-block" style="margin-bottom:1rem">
+          <h3>NOS PROJETS</h3>
+          <p><strong style="color:var(--white)">Resident Evil : La Résurrection d'Umbrella</strong> — Notre serveur phare, un Horror RP/Zombie Survival unique dans l'univers RE.<br><br><strong style="color:var(--blue)">DarkRP (Thème TBA)</strong> — Notre second serveur en développement, avec un thème surprise qui sera révélé prochainement.</p>
+        </div>
+        <div class="about-block">
+          <h3>REJOINDRE L'AVENTURE</h3>
+          <p>Que tu sois joueur casual ou hardcore roleplayer, l'ORS a une place pour toi. Rejoins notre Discord pour rester informé des nouvelles, des évènements et des recrutements en cours.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-cell">
+        <div class="stat-val">2</div>
+        <div class="stat-lbl">Serveurs Actifs</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val">100%</div>
+        <div class="stat-lbl">Passion Française</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val">∞</div>
+        <div class="stat-lbl">Aventures à venir</div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-logo">O<span>R</span>S</div>
+    <div class="footer-copy">© 2025 ORS Community</div>
+    <div class="footer-links"><a href="#">Discord</a><a href="#">Steam</a></div>
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════════════ PAGE : RÈGLES -->
+<div class="page" id="page-rules">
+  <div class="section">
+    <p class="section-label">// Règlement Officiel</p>
+    <h2 class="section-title">RÈGLEMENT RP</h2>
+    <div class="reg-update">Dernière mise à jour : Mai 2026 · Règlement officiel de la communauté ORS</div>
+
+    <div class="rules-accordion">
+
+      <div class="rules-category-label">§ 1 — Règles RP de base</div>
+
+      <div class="rule-item open">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">1.1</span><span class="rule-title-text">Stay In Character (SIC)</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Vous devez rester dans votre personnage en permanence lorsque vous êtes en jeu. Toute communication hors-RP doit se faire via les canaux OOC prévus à cet effet.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">1.2</span><span class="rule-title-text">RDM — Random Death Match</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Il est strictement interdit de tuer un joueur sans raison RP valable et crédible. Toute mort doit être le résultat d'une interaction scénarisée.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">1.3</span><span class="rule-title-text">FailRP</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Adopter des comportements qui brisent l'immersion ou qui ne sont pas crédibles pour votre personnage est interdit. Ex : fuir la police en sautant d'un toit sans conséquence.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">1.4</span><span class="rule-title-text">Powergaming</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Interdiction de forcer des actions sur un joueur sans lui laisser la possibilité de réagir RP. Les /me doivent être réalistes et cohérents avec les capacités physiques du personnage.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">1.5</span><span class="rule-title-text">Metagaming</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Utiliser des informations obtenues hors du jeu (Discord, Teamspeak, stream...) pour en faire bénéficier votre personnage en jeu est totalement interdit.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">1.6</span><span class="rule-title-text">Fear RP</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Votre personnage doit craindre pour sa vie dans des situations dangereuses. Si une arme vous est braquée dessus, vous devez vous soumettre à moins d'avoir un avantage tactique clair.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">1.7</span><span class="rule-title-text">New Life Rule (NLR)</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Après votre mort, votre personnage perd toute mémoire des événements qui ont conduit à sa mort. Retourner sur le lieu de son décès dans les 10 minutes suivantes est interdit.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">1.8</span><span class="rule-title-text">Respect & Immersion</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Tout joueur doit respecter les autres membres. Les insultes réelles, le harcèlement et les discriminations (racisme, sexisme...) sont interdits en RP comme en OOC.</div>
+      </div>
+
+      <div class="rules-category-label">§ 2 — Règles vocales & OOC</div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">2.1</span><span class="rule-title-text">Canal OOC uniquement</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Les discussions hors RP doivent se faire exclusivement dans le chat OOC du serveur ou sur le salon Discord dédié. Ne jamais briser l'immersion en vocal RP.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">2.2</span><span class="rule-title-text">Qualité audio</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Un micro de qualité correcte est recommandé. Les micros saturés, les bruits de fond excessifs ou les personnes qui coupent constamment la communication peuvent être sanctionnés.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">2.3</span><span class="rule-title-text">Volume et perturbations</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Crier, jouer de la musique ou diffuser des sons parasites dans les salons vocaux RP est interdit. Cela vaut également pour les salons Discord de la communauté.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">2.4</span><span class="rule-title-text">Signalement vocal</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Si une situation RP tourne mal ou qu'un litige survient, utilisez le salon #support sur Discord. Ne réglez pas les conflits en vocal public.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">2.5</span><span class="rule-title-text">Discord — Règles générales</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Respectez les catégories et salons Discord. Ne partagez aucun contenu choquant, illégal ou hors sujet. Les pseudos Discord doivent être lisibles et ne pas contenir de caractères spéciaux abusifs.</div>
+      </div>
+
+      <div class="rules-category-label">§ 3 — Anti-triche & fairplay</div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">3.1</span><span class="rule-title-text">Cheats & scripts interdits</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">L'utilisation de tout logiciel de triche (aimbot, wallhack, ESP, speed hack...) ou de scripts d'automatisation non approuvés est immédiatement sanctionnée par un ban permanent.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">3.2</span><span class="rule-title-text">Exploitation de bugs</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Exploiter volontairement un bug du serveur ou du jeu pour en tirer un avantage est interdit. Tout bug découvert doit être signalé immédiatement dans #bug-report sur Discord.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">3.3</span><span class="rule-title-text">Duplication d'objets / argent</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Toute duplication d'items, d'argent ou de ressources par des moyens non légitimes entraîne une suppression du compte et un bannissement.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">3.4</span><span class="rule-title-text">Compte & identité</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Chaque joueur ne peut posséder qu'un seul compte Steam lié au serveur. Le contournement d'un ban via un autre compte (ban evasion) entraîne un ban définitif de tous les comptes identifiés.</div>
+      </div>
+
+      <div class="rule-item">
+        <div class="rule-header" onclick="toggleRule(this)">
+          <div class="rule-header-left"><span class="rule-num">3.5</span><span class="rule-title-text">Modifications client</span></div>
+          <span class="rule-chevron">▾</span>
+        </div>
+        <div class="rule-body">Seules les modifications cosmétiques autorisées par l'équipe (skins, sons...) sont acceptées. Toute modification affectant le gameplay doit être préalablement approuvée par un administrateur.</div>
+      </div>
+
+      <div class="rules-category-label">§ 4 — Sanctions & avertissements</div>
+
+    </div><!-- /accordion -->
+
+    <div class="sanction-grid">
+      <div class="sanction-card sanction-warn">
+        <div class="sanction-icon">🟡</div>
+        <div class="sanction-name">WARN</div>
+        <div class="sanction-trigger">Avertissement verbal</div>
+        <div class="sanction-desc">1re infraction légère : FailRP mineur, OOC intempestif, comportement limite...</div>
+      </div>
+      <div class="sanction-card sanction-kick">
+        <div class="sanction-icon">🔵</div>
+        <div class="sanction-name">KICK</div>
+        <div class="sanction-trigger">Expulsion temporaire</div>
+        <div class="sanction-desc">2e infraction ou comportement perturbateur persistant malgré l'avertissement.</div>
+      </div>
+      <div class="sanction-card sanction-ban">
+        <div class="sanction-icon">🔴</div>
+        <div class="sanction-name">BAN TEMPORAIRE</div>
+        <div class="sanction-trigger">1h – 7 jours selon gravité</div>
+        <div class="sanction-desc">Infractions graves : RDM, metagaming, NLR répété, powergaming délibéré.</div>
+      </div>
+      <div class="sanction-card sanction-perm">
+        <div class="sanction-icon">⛔</div>
+        <div class="sanction-name">BAN PERMANENT</div>
+        <div class="sanction-trigger">Définitif</div>
+        <div class="sanction-desc">Triche, ban evasion, harcèlement grave, toxicité extrême ou récidive après ban temporaire.</div>
+      </div>
+    </div>
+
+    <div class="appeal-box">
+      <div class="appeal-box-icon">⚖️</div>
+      <p>Toute sanction peut faire l'objet d'un <strong>appel</strong> en ouvrant un ticket dans <strong>#support</strong> sur Discord. L'équipe s'engage à répondre sous <strong>48h</strong>. Les décisions finales des administrateurs sont irrévocables.</p>
+    </div>
+
+  </div>
+  <footer>
+    <div class="footer-logo">O<span>R</span>S</div>
+    <div class="footer-copy">© 2025 ORS Community</div>
+    <div class="footer-links"><a href="#">Discord</a><a href="#">Steam</a></div>
+  </footer>
+</div>
+
+<!-- PAGE RECRUTEMENT SUPPRIMEE -->
+<div class="page" id="page-recruit" style="display:none!important">
+  <div class="section">
+    <p class="section-label">// Rejoindre l'équipe</p>
+    <h2 class="section-title">RECRUTEMENT ORS</h2>
+
+    <div class="roles-grid">
+      <div class="role-card">
+        <div class="role-icon">🛡️</div>
+        <div class="role-name">MODÉRATEUR</div>
+        <div class="role-desc">Assurer la sécurité et le bon déroulement du roleplay sur nos serveurs. Faire respecter les règles avec équité.</div>
+        <div class="role-badge">Ouvert</div>
+      </div>
+      <div class="role-card">
+        <div class="role-icon">⚙️</div>
+        <div class="role-name">ADMIN SERVEUR</div>
+        <div class="role-desc">Gérer les aspects techniques et la configuration des serveurs. Expérience GLua appréciée.</div>
+        <div class="role-badge">Ouvert</div>
+      </div>
+      <div class="role-card">
+        <div class="role-icon">🎨</div>
+        <div class="role-name">MAPPER / LUA DEV</div>
+        <div class="role-desc">Créer ou adapter des maps et développer des addons sur mesure pour l'ORS.</div>
+        <div class="role-badge">Ouvert</div>
+      </div>
+      <div class="role-card">
+        <div class="role-icon">📢</div>
+        <div class="role-name">COMMUNITY MANAGER</div>
+        <div class="role-desc">Animer la communauté Discord, gérer les réseaux sociaux et communiquer les actus de l'ORS.</div>
+        <div class="role-badge closed">Fermé</div>
+      </div>
+    </div>
+
+    <div class="apply-box">
+      <h3>FORMULAIRE DE CANDIDATURE</h3>
+      <p>Remplis ce formulaire pour postuler. Notre équipe examinera ta candidature et te contactera sur Discord.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="apply-field">
+          <label>Pseudo Steam / Discord</label>
+          <input type="text" placeholder="TonPseudo#1234">
+        </div>
+        <div class="apply-field">
+          <label>Poste visé</label>
+          <select>
+            <option value="">— Sélectionner —</option>
+            <option>Modérateur</option>
+            <option>Admin Serveur</option>
+            <option>Mapper / Lua Dev</option>
+          </select>
+        </div>
+      </div>
+      <div class="apply-field">
+        <label>Âge & Expérience Gmod</label>
+        <input type="text" placeholder="Ex : 19 ans — 800h sur Gmod, ancien admin sur...">
+      </div>
+      <div class="apply-field">
+        <label>Pourquoi rejoindre l'ORS ?</label>
+        <textarea rows="4" placeholder="Explique ta motivation et ce que tu apporterais à la communauté..."></textarea>
+      </div>
+      <div class="apply-field">
+        <label>Disponibilités</label>
+        <input type="text" placeholder="Ex : Soirs en semaine + week-ends">
+      </div>
+      <button class="btn-primary" style="clip-path:none;width:100%;padding:.85rem;font-size:1rem" onclick="submitApplication()">
+        ENVOYER MA CANDIDATURE
+      </button>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-logo">O<span>R</span>S</div>
+    <div class="footer-copy">© 2025 ORS Community</div>
+    <div class="footer-links"><a href="#">Discord</a><a href="#">Steam</a></div>
+  </footer>
+</div>
+
+<script>
+// ─── NAVIGATION ───────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const idx = ['home','servers','lore','about','rules'].indexOf(id);
+  document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── RULES ACCORDION ─────────────────────────────────────
+function toggleRule(header) {
+  const item = header.parentElement;
+  item.classList.toggle('open');
+}
+
+// ─── SERVER STATUS CHECK ──────────────────────────────────
+// Config : remplacez les IPs/ports par vos vrais serveurs
+const SERVERS = {
+  re:  { ip: '0.0.0.0', port: 27015, label: 'Resident Evil', maxPlayers: 32 },
+  drp: { ip: '0.0.0.0', port: 27016, label: 'DarkRP',        maxPlayers: 64 },
+};
+
+// Simulation démo — remplacez checkStatus() par un vrai appel API Steam si vous avez un backend
+function checkStatus() {
+  // Ici on simule une vérification aléatoire pour la démo visuelle
+  // En production, utilisez l'API Steam ou un proxy backend :
+  // fetch(`https://votre-backend.com/status?ip=${ip}&port=${port}`)
+
+  const RE_ONLINE  = false; // Changez en `true` pour tester
+  const DRP_ONLINE = false;
+
+  const reData  = RE_ONLINE  ? { online: true,  players: 14, maxPlayers: 32 } : { online: false };
+  const drpData = DRP_ONLINE ? { online: true,  players: 31, maxPlayers: 64 } : { online: false };
+
+  applyStatus('re',  reData);
+  applyStatus('drp', drpData);
+}
+
+function applyStatus(key, data) {
+  const ids = [
+    { dot: `home-${key}-dot`, status: `home-${key}-status`, players: `home-${key}-players`, btn: `home-${key}-btn` },
+    { dot: `srv-${key}-dot`,  status: `srv-${key}-status`,  players: `srv-${key}-players`,  btn: `srv-${key}-btn`  },
+  ];
+
+  ids.forEach(({ dot, status, players, btn }) => {
+    const dotEl    = document.getElementById(dot);
+    const statusEl = document.getElementById(status);
+    const playEl   = document.getElementById(players);
+    const btnEl    = document.getElementById(btn);
+    if (!dotEl) return;
+
+    if (data.online) {
+      dotEl.classList.add('online');
+      statusEl.textContent = 'EN LIGNE';
+      statusEl.classList.add('online');
+      playEl.textContent = `${data.players} / ${data.maxPlayers} joueurs`;
+      if (btnEl) btnEl.disabled = false;
+    } else {
+      dotEl.classList.remove('online');
+      statusEl.textContent = 'HORS LIGNE';
+      statusEl.classList.remove('online');
+      playEl.textContent = '';
+      if (btnEl) btnEl.disabled = true;
+    }
+  });
+}
+
+function connectServer(key) {
+  const s = SERVERS[key];
+  const cmd = `connect ${s.ip}:${s.port}`;
+  navigator.clipboard?.writeText(cmd).catch(() => {});
+  showToast(`✓ Commande copiée : ${cmd}`);
+  // Tenter d'ouvrir via le protocole steam :
+  window.location.href = `steam://connect/${s.ip}:${s.port}`;
+}
+
+// ─── TOAST ────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── APPLICATION ──────────────────────────────────────────
+function submitApplication() {
+  showToast('✓ Candidature envoyée ! On te contacte bientôt.');
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+checkStatus();
+setInterval(checkStatus, 60000); // refresh toutes les minutes
+</script>
+</body>
+</html>
